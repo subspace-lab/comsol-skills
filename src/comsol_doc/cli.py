@@ -1,6 +1,7 @@
 """Command-line interface for COMSOL documentation search."""
 
 import typer
+import re
 from typing import Optional
 from pathlib import Path
 from rich.console import Console
@@ -61,6 +62,7 @@ def search(
 
         comsol-search search "battery" --module "Battery Design,Heat Transfer"
     """
+    searcher = ComsolDocSearcher(version=version, headless=True)
     try:
         # Show progress
         with Progress(
@@ -71,7 +73,6 @@ def search(
             task = progress.add_task(f"Searching COMSOL {version} documentation for '{term}'...", total=None)
 
             # Perform search
-            searcher = ComsolDocSearcher(version=version, headless=True)
             results = searcher.search(term, max_results=max_results)
 
             # Filter by module if specified
@@ -82,7 +83,7 @@ def search(
 
                 results = [
                     r for r in results
-                    if any(module_filter in r.path.lower() for module_filter in module_filters)
+                    if any(module_filter in r.module.lower() for module_filter in module_filters)
                 ]
 
                 filtered_count = len(results)
@@ -103,6 +104,8 @@ def search(
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         raise typer.Exit(code=1)
+    finally:
+        searcher.close()
 
 
 @app.command()
@@ -127,6 +130,11 @@ def retrieve(
 
         comsol-search retrieve <url> --format markdown --output doc.md
     """
+    # Extract version from URL if possible
+    version_match = re.search(r"/(\d+\.\d+)/", url)
+    version = version_match.group(1) if version_match else DEFAULT_VERSION
+    
+    searcher = ComsolDocSearcher(version=version, headless=True)
     try:
         # Show progress
         with Progress(
@@ -136,15 +144,7 @@ def retrieve(
         ) as progress:
             task = progress.add_task(f"Retrieving content from URL...", total=None)
 
-            # Extract version from URL if possible
-            version = DEFAULT_VERSION
-            if "/6.3/" in url:
-                version = "6.3"
-            elif "/6.4/" in url:
-                version = "6.4"
-
             # Retrieve content
-            searcher = ComsolDocSearcher(version=version, headless=True)
             doc = searcher.retrieve_content(url)
 
             progress.update(task, description=f"Retrieved: {doc.title}")
@@ -162,6 +162,8 @@ def retrieve(
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         raise typer.Exit(code=1)
+    finally:
+        searcher.close()
 
 
 @app.command()

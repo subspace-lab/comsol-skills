@@ -123,6 +123,130 @@ If a specific search fails, try broader terms:
 3. **Try related concepts**
    - "charging protocol" → Success!
 
+### 🌐 Composing with Web Search for Semantic Understanding
+
+**Problem:** Users often use general terms that don't match COMSOL's technical vocabulary.
+
+**Solution:** Use web search to discover COMSOL-specific terminology, then search documentation.
+
+#### Workflow: Terminology Discovery
+
+**Step 1: Use WebSearch to understand COMSOL terminology**
+```
+When user asks: "I want to model particle-level battery behavior"
+→ Use WebSearch to discover COMSOL terminology
+→ Learn: COMSOL calls this "intercalation", "porous electrode", "particle diffusion"
+```
+
+**Step 2: Use discovered terms in comsol-search**
+```bash
+uv run comsol-search search "intercalation lithium" --module "Battery"
+uv run comsol-search search "porous electrode" --module "Battery"
+```
+
+#### Example Pattern
+
+**User Request:** "Set up particle model for iPhone battery OCV using script"
+
+**Composable Workflow:**
+
+1. **WebSearch for terminology**
+   ```
+   Query: "COMSOL particle model battery terminology"
+   Result: Discover terms "intercalation", "single particle model", "lithium-ion battery interface"
+   ```
+
+2. **Search COMSOL docs with proper terms**
+   ```bash
+   uv run comsol-search search "lithium ion battery interface" --max-results 20
+   uv run comsol-search search "intercalation" --module "Battery"
+   uv run comsol-search search "open circuit voltage" --module "Battery"
+   ```
+
+3. **WebSearch for API terminology**
+   ```
+   Query: "COMSOL Java API create physics interface"
+   Result: Learn about "Model object", "physics().create()", "study().run()"
+   ```
+
+4. **Search COMSOL API docs**
+   ```bash
+   uv run comsol-search search "model object" --module "programming"
+   uv run comsol-search search "java api physics" --module "programming"
+   ```
+
+#### Common Terminology Transformations
+
+Use WebSearch to map user terminology → COMSOL terminology:
+
+| User Term | WebSearch Query | COMSOL Term Found | Search Query |
+|-----------|----------------|-------------------|--------------|
+| "particle model" | "COMSOL battery particle" | "intercalation", "porous electrode" | `search "intercalation"` |
+| "OCV curve" | "COMSOL open circuit voltage" | "equilibrium potential", "OCV modeling" | `search "equilibrium potential"` |
+| "battery script" | "COMSOL battery automation Java" | "Lithium-Ion Battery interface", "Java API" | `search "java api"` |
+| "aging simulation" | "COMSOL battery aging" | "capacity fade", "calendar aging", "SEI layer" | `search "capacity fade"` |
+
+#### When to Use This Pattern
+
+**Use web search for terminology discovery when:**
+- User query returns 0 results from comsol-search
+- User uses generic/academic terms (not COMSOL-specific)
+- User is new to COMSOL and unfamiliar with terminology
+- Exploring unfamiliar domain (e.g., moving from CFD to battery modeling)
+
+**Example:**
+```bash
+# Direct search fails
+$ uv run comsol-search search "particle model" --module "Battery"
+⠹ Found 15 results, filtered to 0 by module  # ❌
+
+# Use web search to discover terminology
+→ WebSearch: "COMSOL particle model battery"
+→ Learn: "intercalation", "spherical diffusion", "porous electrode"
+
+# Try again with COMSOL terms
+$ uv run comsol-search search "intercalation" --module "Battery"
+⠹ Found 10 results, filtered to 3 by module  # ✅
+
+$ uv run comsol-search search "porous electrode" --module "Battery"
+⠹ Found 12 results, filtered to 5 by module  # ✅
+```
+
+#### Advanced: Multi-Step Discovery
+
+For complex tasks, chain web search and documentation search:
+
+```
+User: "Create thermal-electrochemical coupled battery model with aging"
+
+Step 1: WebSearch "COMSOL battery thermal electrochemical coupling"
+→ Learn: "Nonisothermal Lithium-Ion Battery interface", "multiphysics coupling"
+
+Step 2: Search interface documentation
+$ comsol-search search "nonisothermal lithium ion battery" --module "Battery"
+
+Step 3: WebSearch "COMSOL battery aging mechanisms"
+→ Learn: "SEI layer", "lithium plating", "capacity fade", "impedance rise"
+
+Step 4: Search aging documentation
+$ comsol-search search "SEI layer" --module "Battery"
+$ comsol-search search "capacity fade" --module "Battery"
+
+Step 5: WebSearch "COMSOL Java API multiphysics"
+→ Learn: "multiphysics().create()", "physics interface names"
+
+Step 6: Search API documentation
+$ comsol-search search "java api multiphysics" --module "programming"
+```
+
+#### Benefits of Composable Approach
+
+✅ **Flexibility:** Use web search when needed, skip when not
+✅ **No tight coupling:** Tools remain independent
+✅ **Semantic understanding:** Web search provides context
+✅ **Accurate results:** COMSOL search provides authoritative docs
+✅ **User control:** You decide when to use each tool
+
 ### 🎯 Module Filtering for Specific Use Cases
 
 Use `--module` flag to focus on relevant documentation sections:
@@ -133,6 +257,59 @@ Use `--module` flag to focus on relevant documentation sections:
 uv run comsol-search search "add physics" --module "Application Programming"
 uv run comsol-search search "model object" --module "Application Programming"
 uv run comsol-search search "run study" --module "Application Programming"
+```
+
+### 📚 Available Modules and Guides (COMSOL 6.4)
+
+The `--module` flag accepts partial matches. Here are the main modules/guides available:
+
+**Core Documentation:**
+- `COMSOL Multiphysics` - Core documentation
+- `Application Programming Guide` - API and Java programming
+- `Model Manager API` - Model management API
+- `Physics Builder Manual` - Custom physics interfaces
+
+**Physics Modules:**
+- `Battery Design Module` - Battery modeling and simulation
+- `CFD Module` - Computational fluid dynamics
+- `Heat Transfer Module` - Heat transfer modeling
+- `Structural Mechanics Module` - Structural analysis
+- `Acoustics Module` - Acoustics and vibration
+
+**Specialized Modules:**
+- `Chemical Reaction Engineering Module` - Chemical reactions
+- `Corrosion Module` - Corrosion modeling
+- `Electrochemistry Module` - Electrochemical systems
+- `Electrodeposition Module` - Electroplating and deposition
+- `Fuel Cell & Electrolyzer Module` - Fuel cells and electrolyzers
+- `Microfluidics Module` - Microfluidic devices
+- `Optimization Module` - Design optimization
+- `Plasma Module` - Plasma physics
+- `Electric Discharge Module` - Electrical discharge
+
+**Flow and Porous Media:**
+- `Pipe Flow Module` - Pipe networks and flow
+- `Porous Media Flow Module` - Flow in porous media
+- `Polymer Flow Module` - Non-Newtonian flow
+- `Subsurface Flow Module` - Groundwater and subsurface
+
+**Other Resources:**
+- `Material Library` - Material properties database
+- `Release Notes` - Version updates and changes
+- `Reference Manual` - Complete reference documentation
+- `LiveLink™ for Simulink®` - MATLAB/Simulink integration
+
+**Usage Examples:**
+```bash
+# Use partial matches for convenience
+uv run comsol-search search "aging" --module "Battery"
+uv run comsol-search search "turbulence" --module "CFD"
+uv run comsol-search search "java api" --module "programming"
+uv run comsol-search search "material properties" --module "Material"
+
+# Combine multiple modules (comma-separated)
+uv run comsol-search search "thermal" --module "Battery,Heat Transfer"
+uv run comsol-search search "flow" --module "CFD,Microfluidics"
 ```
 
 **For Battery Engineering:**
